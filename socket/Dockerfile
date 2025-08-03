@@ -1,7 +1,13 @@
-  python-realtime:
-    build: ./socket
-    container_name: python-realtime
-    ports:
-      - "8000:8000"
-    depends_on:
-      - rabbitmq
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy everything from the socket folder to the container
+COPY . .
+
+# Install dependencies
+RUN pip install --no-cache-dir fastapi uvicorn
+
+# Run the app
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

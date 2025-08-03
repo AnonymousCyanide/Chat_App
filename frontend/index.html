@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ChatApp WebSocket Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
+    input, button { margin-top: 10px; padding: 8px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h2>WebSocket Chat</h2>
+
+  <div id="messages"></div>
+
+  <input type="text" id="input" placeholder="Type a message..." />
+  <button onclick="sendMessage()">Send</button>
+
+  <script>
+    const ws = new WebSocket("ws://localhost:8000/ws");
+    const messagesDiv = document.getElementById("messages");
+
+    ws.onopen = () => {
+      appendMessage("✅ Connected to WebSocket.");
+    };
+
+    ws.onmessage = (event) => {
+      appendMessage("📨 " + event.data);
+    };
+
+    ws.onclose = () => {
+      appendMessage("❌ Connection closed.");
+    };
+
+    function sendMessage() {
+      const input = document.getElementById("input");
+      const message = input.value;
+      if (message) {
+        ws.send(message);
+        appendMessage("🧑 You: " + message);
+        input.value = "";
+      }
+    }
+
+    function appendMessage(msg) {
+      const p = document.createElement("p");
+      p.textContent = msg;
+      messagesDiv.appendChild(p);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  </script>
+</body>
+</html>

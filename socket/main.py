@@ -36,7 +36,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
             # Broadcast to other users in chat
             for peer in chat_manager.get_chat_users(chat_id):
-                if peer != user_id:
+                if True:
                     ws = user_manager.get_user_socket(peer)
                     if ws:
                         try:

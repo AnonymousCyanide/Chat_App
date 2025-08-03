@@ -1,53 +1,93 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>ChatApp WebSocket Test</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
-    input, button { margin-top: 10px; padding: 8px; font-size: 16px; }
-  </style>
+  <title>ChatApp</title>
 </head>
 <body>
-  <h2>WebSocket Chat</h2>
+  <h2>Connect to Chat</h2>
 
-  <div id="messages"></div>
+  <label>User ID:</label>
+  <input type="text" id="user_id" placeholder="e.g. alice"><br><br>
 
-  <input type="text" id="input" placeholder="Type a message..." />
-  <button onclick="sendMessage()">Send</button>
+  <label>Chat ID:</label>
+  <input type="text" id="chat_id" placeholder="e.g. room1"><br><br>
+
+  <button onclick="connect()">Connect</button>
+
+  <hr>
+
+  <div id="chat" style="display:none;">
+    <h3>Chat Messages</h3>
+    <div id="chat_log" style="border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 5px;"></div><br>
+
+    <input type="text" id="msg" placeholder="Type a message">
+    <button onclick="sendMessage()">Send</button>
+  </div>
 
   <script>
-    const ws = new WebSlocket("ws://localhost:8000/ws");
-    const messagesDiv = document.getElementById("messages");
+    let socket;
 
-    ws.onopen = () => {
-      appendMessage("✅ Connected to WebSocket.");
-    };
+    function connect() {
+      const user_id = document.getElementById("user_id").value;
+      const chat_id = document.getElementById("chat_id").value;
 
-    ws.onmessage = (event) => {
-      appendMessage("📨 " + event.data);
-    };
-
-    ws.onclose = () => {
-      appendMessage("❌ Connection closed.");
-    };
-
-    function sendMessage() {
-      const input = document.getElementById("input");
-      const message = input.value;
-      if (message) {
-        ws.send(message);
-        appendMessage("🧑 You: " + message);
-        input.value = "";
+      if (!user_id || !chat_id) {
+        alert("Please enter both user ID and chat ID.");
+        return;
       }
+
+      socket = new WebSocket("ws://localhost:8000/ws");
+
+      socket.onopen = () => {
+        const initPayload = {
+          user_id: user_id,
+          chat_id: chat_id
+        };
+        socket.send(JSON.stringify(initPayload));
+        document.getElementById("chat").style.display = "block";
+      };
+
+ socket.onmessage = (event) => {
+  const chatLog = document.getElementById("chat_log");
+  const userId = document.getElementById("user_id").value;
+
+  try {
+    const msgData = JSON.parse(event.data);
+    const msg = document.createElement("div");
+
+    if (msgData.from === userId) {
+      msg.innerHTML = `<strong>You:</strong> ${msgData.text}`;
+      msg.style.textAlign = "right";
+      msg.style.color = "blue";
+    } else {
+      msg.innerHTML = `<strong>${msgData.from}:</strong> ${msgData.text}`;
+      msg.style.textAlign = "left";
+      msg.style.color = "green";
     }
 
-    function appendMessage(msg) {
-      const p = document.createElement("p");
-      p.textContent = msg;
-      messagesDiv.appendChild(p);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    chatLog.appendChild(msg);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  } catch (e) {
+    console.warn("Non-chat message or malformed JSON:", event.data);
+  }
+};
+
+      socket.onclose = () => {
+        alert("Connection closed.");
+        document.getElementById("chat").style.display = "none";
+      };
+
+      socket.onerror = (e) => {
+        console.error("Socket error", e);
+      };
+    }
+
+    function sendMessage() {
+      const msg = document.getElementById("msg").value;
+      if (msg && socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(msg);
+        document.getElementById("msg").value = "";
+      }
     }
   </script>
 </body>

@@ -9,7 +9,7 @@ services:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: pass
     volumes:
-      - ./rabbitmq-data:/var/lib/rabbitmq
+      - rabbitmq_data:/var/lib/rabbitmq
 
   mysql:
     image: mysql:8
@@ -22,10 +22,10 @@ services:
       MYSQL_USER: chatuser
       MYSQL_PASSWORD: chatpass
     volumes:
-      - ./mysql-data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
 
   java-backend:
-    build: ./app
+    build: ./app/ChatApp
     container_name: java-backend
     ports:
       - "8080:8080"
@@ -40,4 +40,8 @@ services:
       - "8000:8000"
     depends_on:
       - rabbitmq
+
+volumes:
+  rabbitmq_data:
+  mysql_data:
 

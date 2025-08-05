@@ -22,13 +22,14 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.send_text("Missing user_id or chat_id")
             await websocket.close()
             return
-
-        user_manager.add_user(user_id, websocket)
-        chat_manager.add_user_to_chat(user_id, chat_id)
         
-        # Send chat history
-        for msg in chat_manager.get_history(chat_id):
-            await websocket.send_text(json.dumps(msg))
+        if not user_manager.get_user_socket(user_id):
+            user_manager.add_user(user_id, websocket)
+            chat_manager.add_user_to_chat(user_id, chat_id)
+        
+            # Send chat history
+            for msg in chat_manager.get_history(chat_id):
+                await websocket.send_text(json.dumps(msg))
 
         while True:
             msg_data = await websocket.receive_text()
